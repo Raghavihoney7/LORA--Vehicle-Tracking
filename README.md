@@ -1,96 +1,108 @@
-### README for LoRa GPS Communication
+# 🚀 LoRa GPS Transmitter-Receiver Project
 
-## 📌 Project Overview
-This project implements a **LoRa-based GPS communication system** using **TinyGPS++**, **SoftwareSerial**, and **LoRa E32 modules**. The system consists of a **transmitter** that sends GPS coordinates over LoRa and a **receiver** that parses and displays the received data.
+This project uses **LoRa modules and GPS** to transmit real-time latitude and longitude data from a **transmitter** to a **receiver**. The receiver processes and displays the data on an **OLED screen**.
 
----
-
-## 📜 Features
-- **LoRa-based communication** between two modules.
-- **GPS data retrieval** using TinyGPS++ library.
-- **Parsing and extraction** of latitude and longitude.
-- **AT Command Configuration** for setting LoRa addresses and network ID.
+## 📌 Features
+- 🛰️ **Real-time GPS tracking** with TinyGPS++.
+- 📡 **LoRa-based wireless communication** between TX & RX.
+- 📺 **OLED Display** for real-time data visualization.
+- 🔄 **Data parsing & validation** on receiver side.
+- 🛠 **Configurable LoRa settings** (Addressing, Network ID).
 
 ---
 
-## 🛠️ Hardware Requirements
-- **Arduino Uno/Nano**
-- **LoRa E32 433/915MHz Module**
-- **GPS Module (Neo-6M or similar)**
-- **Jumper Wires**
-- **OLED Display (Optional for visual output)**
+## 📷 Project Images
+
+### **📡 Network Architecture**
+![Network Diagram](network tx and rx.png)
+
+### **🔁 Transmitter Flowchart**
+![Transmitter Flowchart](flowchart tx.png)
+
+### **📥 Receiver Flowchart**
+![Receiver Flowchart](flowchart rx.png)
+
+### **🛰️ GPS Module Setup**
+![GPS Module](gps.png)
+
+### **🛠 PCB Design**
+![PCB Layout](PCB design.png)
 
 ---
 
-## 📂 File Structure
-```
-│── transmitter.ino   # Sends GPS data over LoRa
-│── receiver.ino      # Receives and parses GPS data
-│── README.md         # Documentation
-```
+## 🔧 **Hardware Requirements**
+| Component            | Quantity |
+|----------------------|----------|
+| 🛰️ GPS Module (NEO-6M)  | 1        |
+| 📡 LoRa Module (E32) | 2        |
+| 🔵 Arduino UNO/Nano  | 2        |
+| 🖥 OLED Display (128x64) | 1        |
+| 🔌 Jumper Wires      | As needed |
 
 ---
 
-## 🚀 Getting Started
-
-### 1️⃣ **Wiring**
-| **LoRa Module** | **Arduino** |
-|-------------|---------|
-| M0, M1 | GND (for normal mode) |
-| TX | Pin 8 |
-| RX | Pin 9 |
-| VCC | 3.3V |
-| GND | GND |
-
-| **GPS Module** | **Arduino** |
-|-------------|---------|
-| TX | Pin 10 |
-| RX | Pin 11 |
-| VCC | 5V |
-| GND | GND |
+## 🖥️ **Software Requirements**
+- Arduino IDE
+- TinyGPS++ Library
+- U8g2 Library (for OLED)
+- SoftwareSerial Library
 
 ---
 
-### 2️⃣ **Installation**
-1. **Clone the repository**  
-   ```sh
-   git clone https://github.com/yourusername/lora-gps.git
-   cd lora-gps
-   ```
-2. **Install Arduino Libraries**  
-   - [TinyGPS++](https://github.com/mikalhart/TinyGPSPlus)
-   - SoftwareSerial (Built-in)
+## 🚀 **Installation & Setup**
+### **1️⃣ Wiring the Transmitter**
+| **Arduino** | **GPS Module** | **LoRa Module (E32)** |
+|------------|-------------|-------------------|
+| **TX (D3)** | RX         | M0 → LOW, M1 → LOW |
+| **RX (D4)** | TX         | VCC → 3.3V, GND → GND |
+| **VCC (3.3V)** | VCC | TX → D8, RX → D9 |
+
+### **2️⃣ Wiring the Receiver**
+| **Arduino** | **LoRa Module (E32)** | **OLED Display** |
+|------------|-------------------|-----------------|
+| **TX (D2)** | RX | SDA → A4, SCL → A5 |
+| **RX (D3)** | TX | VCC → 3.3V, GND → GND |
 
 ---
 
-### 3️⃣ **Usage**
-#### **Uploading the Code**
-1. Upload **`transmitter.ino`** to the first Arduino (LoRa sender).
-2. Upload **`receiver.ino`** to the second Arduino (LoRa receiver).
-3. Open the **Serial Monitor** at 9600 baud rate.
+## 📜 **Code Implementation**
+### **📤 Transmitter Code**
+```cpp
+#include <TinyGPSPlus.h>
+#include <SoftwareSerial.h>
 
-#### **Expected Output**
-- **Transmitter Output:**
-  ```
-  Location: 17.3850, 78.4867
-  Sent: AT+SEND=2,15,17.3850/78.4867
-  ```
-- **Receiver Output:**
-  ```
-  Received data: RCV=17.3850/78.4867
-  Latitude: 17.3850
-  Longitude: 78.4867
-  ```
+// Define SoftwareSerial for LoRa
+SoftwareSerial loraSerial(8, 9); // RX, TX
 
----
+TinyGPSPlus gps;
 
-## 🛠️ Troubleshooting
-- **No GPS Data?**  
-  - Check GPS module wiring.
-  - Ensure GPS is outdoors for better signal.
-- **LoRa Not Communicating?**  
-  - Verify **M0, M1 pins** are set correctly.
-  - Check **baud rate and addresses**.
+void setup() {
+  Serial.begin(9600);
+  loraSerial.begin(9600);
 
----
+  // Set LoRa parameters
+  loraSerial.println("AT+ADDRESS=1");
+  delay(1000);
+  loraSerial.println("AT+DESTINATION=2");
+  delay(1000);
+  loraSerial.println("AT+NETWORKID=6");
+  delay(1000);
+}
 
+void loop() {
+  while (Serial.available() > 0)
+    if (gps.encode(Serial.read()))
+      sendLocation();
+}
+
+void sendLocation() {
+  if (gps.location.isValid()) {
+    String gps_data = String(gps.location.lat(), 6) + "/" + String(gps.location.lng(), 6);
+    String command = "AT+SEND=2," + String(gps_data.length()) + "," + gps_data;
+    loraSerial.println(command);
+    delay(2000);
+  } else {
+    loraSerial.println("AT+SEND=2,7,Invalid");
+    delay(500);
+  }
+}
