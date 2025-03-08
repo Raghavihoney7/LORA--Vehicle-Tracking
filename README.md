@@ -14,19 +14,19 @@ This project uses **LoRa modules and GPS** to transmit real-time latitude and lo
 ## 📷 Project Images
 
 ### **📡 Network Architecture**
-![Network Diagram](network tx and rx.png)
+![Network Diagram](network.png)
 
 ### **🔁 Transmitter Flowchart**
-![Transmitter Flowchart](flowchart tx.png)
+![Transmitter Flowchart](flowchart_tx.png)
 
 ### **📥 Receiver Flowchart**
-![Receiver Flowchart](flowchart rx.png)
+![Receiver Flowchart](flowchart_rx.png)
 
 ### **🛰️ GPS Module Setup**
 ![GPS Module](gps.png)
 
 ### **🛠 PCB Design**
-![PCB Layout](PCB design.png)
+![PCB Layout](PCB_design.png)
 
 ---
 
