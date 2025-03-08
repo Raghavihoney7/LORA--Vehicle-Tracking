@@ -106,3 +106,45 @@ void sendLocation() {
     delay(500);
   }
 }
+
+```
+### **📤 Receiver Code**
+```cpp
+#include <SoftwareSerial.h>
+#include <U8g2lib.h>
+
+// Define SoftwareSerial for LoRa communication
+SoftwareSerial e32Serial(2, 3); // RX, TX
+
+// Initialize OLED display
+U8G2_SSD1306_128X64_NONAME_F_SW_I2C u8g2(U8G2_R0, SCL, SDA, U8X8_PIN_NONE);
+
+void setup() {
+  u8g2.begin();
+  Serial.begin(9600);
+  e32Serial.begin(9600);
+}
+
+void loop() {
+  if (!e32Serial.available()) {
+    u8g2.clearBuffer();
+    u8g2.setFont(u8g2_font_ncenB08_tr);
+    u8g2.setCursor(2, 30);
+    u8g2.print("No data");
+    u8g2.sendBuffer();
+  } else {
+    String data = e32Serial.readStringUntil('\n');
+    Serial.println("Received: " + data);
+    displayData(data);
+  }
+}
+
+void displayData(String data) {
+  u8g2.clearBuffer();
+  u8g2.setFont(u8g2_font_ncenB08_tr);
+  u8g2.setCursor(2, 10);
+  u8g2.print("Location: ");
+  u8g2.print(data);
+  u8g2.sendBuffer();
+}
+
